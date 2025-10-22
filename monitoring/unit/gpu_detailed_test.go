@@ -27,8 +27,8 @@ func TestDetailedGPUDetection(t *testing.T) {
 			t.Logf("GPU detailed info collection failed: %v", err)
 		} else {
 			for i, info := range detailedInfo {
-				t.Logf("GPU %d: %s - Memory: %dMB/%dMB, Usage: %.1f%%, Temp: %d°C",
-					i, info.Name, info.MemoryUsed, info.MemoryTotal, info.Utilization, info.Temperature)
+				t.Logf("GPU %d: %s - Memory: %dMB/%dMB, Usage: %.1f%%, Temp: %d°C, Power: %.1fW",
+					i, info.Name, info.MemoryUsed, info.MemoryTotal, info.Utilization, info.Temperature, info.PowerUsage)
 			}
 		}
 	}
@@ -54,6 +54,7 @@ func TestDetailedGPUInfo(t *testing.T) {
 		//t.Logf("  Memory Free: %d MB", info.MemoryFree)
 		t.Logf("  Utilization: %.1f%%", info.Utilization)
 		t.Logf("  Temperature: %d°C", info.Temperature)
+		t.Logf("  Power Usage: %.1f W", info.PowerUsage)
 
 		// 验证数据的合理性
 		//if info.MemoryTotal > 0 && info.MemoryUsed+info.MemoryFree != info.MemoryTotal {
@@ -62,6 +63,10 @@ func TestDetailedGPUInfo(t *testing.T) {
 
 		if info.Utilization < 0 || info.Utilization > 100 {
 			t.Errorf("Invalid utilization value for %s: %.1f%%", info.Name, info.Utilization)
+		}
+
+		if info.PowerUsage < 0 {
+			t.Errorf("Invalid power usage value for %s: %.1f W", info.Name, info.PowerUsage)
 		}
 	}
 }

@@ -20,6 +20,7 @@ type DetailedGPUInfo struct {
 	MemoryUsed   uint64  `json:"memory_used"`   // 已用显存 (字节)
 	Utilization  float64 `json:"utilization"`   // GPU使用率 (0-100)
 	Temperature  uint64  `json:"temperature"`   // 温度 (摄氏度)
+	PowerUsage   float64 `json:"power_usage"`   // 功耗 (瓦特)
 }
 
 func getDetailedVendor() uint8 {
@@ -176,6 +177,7 @@ func getNvidiaDetailedInfo() ([]DetailedGPUInfo, error) {
 			MemoryUsed:   nvidiaInfo.MemoryUsed,
 			Utilization:  nvidiaInfo.Utilization,
 			Temperature:  nvidiaInfo.Temperature,
+			PowerUsage:   nvidiaInfo.PowerUsage,
 		}
 		gpuInfos = append(gpuInfos, gpuInfo)
 	}
@@ -205,6 +207,7 @@ func getAMDDetailedInfo() ([]DetailedGPUInfo, error) {
 			MemoryUsed:   amdInfo.MemoryUsed,
 			Utilization:  amdInfo.Utilization,
 			Temperature:  amdInfo.Temperature,
+			PowerUsage:   amdInfo.PowerUsage,
 		}
 		gpuInfos = append(gpuInfos, gpuInfo)
 	}

@@ -24,6 +24,7 @@ type NVIDIAGPUInfo struct {
 	MemoryUsed  uint64  // 已用显存 (字节)
 	Utilization float64 // GPU使用率 (0-100)
 	Temperature uint64  // 温度 (摄氏度)
+	PowerUsage  float64 // 功耗 (瓦特)
 }
 
 func (smi *NvidiaSMI) GatherModel() ([]string, error) {
@@ -109,6 +110,7 @@ func (smi *NvidiaSMI) gatherDetailedInfo() ([]NVIDIAGPUInfo, error) {
 		memTotal, _ := parseMemoryValue(gpu.FrameBufferMemoryUsage.Total)
 		memUsed, _ := parseMemoryValue(gpu.FrameBufferMemoryUsage.Used)
 		temp, _ := parseTemperatureValue(gpu.Temperature.GPUTemp)
+		power, _ := parsePowerValue(gpu.PowerReadings.PowerDraw)
 
 		gpuInfo := NVIDIAGPUInfo{
 			Name:        gpu.ProductName,
@@ -116,6 +118,7 @@ func (smi *NvidiaSMI) gatherDetailedInfo() ([]NVIDIAGPUInfo, error) {
 			MemoryUsed:  memUsed,
 			Utilization: utilization,
 			Temperature: temp,
+			PowerUsage:  power,
 		}
 
 		gpuInfos = append(gpuInfos, gpuInfo)
@@ -179,6 +182,24 @@ func parseTemperatureValue(value string) (uint64, error) {
 	return result, nil
 }
 
+// 解析功耗值 (例如 "350.50 W" -> 350.50)
+func parsePowerValue(value string) (float64, error) {
+	cleaned := strings.TrimSpace(value)
+	cleaned = strings.TrimSuffix(cleaned, "W")
+	cleaned = strings.TrimSpace(cleaned)
+
+	if cleaned == "" || cleaned == "N/A" {
+		return 0.0, nil
+	}
+
+	result, err := strconv.ParseFloat(cleaned, 64)
+	if err != nil {
+		return 0.0, err
+	}
+
+	return result, nil
+}
+
 // NVIDIA-SMI XML结构定义
 type nvidiaSMIXMLResult struct {
 	GPUs []nvidiaSMIGPU `xml:"gpu"`
@@ -197,4 +218,7 @@ type nvidiaSMIGPU struct {
 	Temperature struct {
 		GPUTemp string `xml:"gpu_temp"`
 	} `xml:"temperature"`
+	PowerReadings struct {
+		PowerDraw string `xml:"power_draw"`
+	} `xml:"power_readings"`
 }
