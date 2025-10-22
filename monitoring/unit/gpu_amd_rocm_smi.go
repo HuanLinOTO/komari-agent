@@ -24,6 +24,7 @@ type AMDGPUInfo struct {
 	MemoryUsed  uint64  // 已用显存 (字节)
 	Utilization float64 // GPU使用率 (0-100)
 	Temperature uint64  // 温度 (摄氏度)
+	PowerUsage  float64 // 功耗 (瓦特)
 }
 
 // ROCmSMI JSON响应结构
@@ -35,6 +36,7 @@ type ROCmGPUInfo struct {
 	VRAMTotalMemory     string `json:"VRAM Total Memory (B)"`
 	VRAMTotalUsedMemory string `json:"VRAM Total Used Memory (B)"`
 	TemperatureJunction string `json:"Temperature (Sensor junction) (C)"`
+	AveragePower        string `json:"Average Graphics Package Power (W)"`
 }
 
 func (rsmi *ROCmSMI) GatherModel() ([]string, error) {
@@ -184,6 +186,15 @@ func (rsmi *ROCmSMI) gatherDetailedInfo() ([]AMDGPUInfo, error) {
 					}
 				}
 
+				// 获取功耗信息
+				if powerData, exists := cardData["Average Graphics Package Power (W)"]; exists {
+					if powerStr, ok := powerData.(string); ok {
+						if power, err := parseAMDPower(powerStr); err == nil {
+							gpuInfo.PowerUsage = power
+						}
+					}
+				}
+
 				gpuInfos = append(gpuInfos, gpuInfo)
 			}
 		}
@@ -240,6 +251,24 @@ func parseAMDTemperature(value string) (uint64, error) {
 	result, err := strconv.ParseUint(cleaned, 10, 64)
 	if err != nil {
 		return 0, err
+	}
+
+	return result, nil
+}
+
+// 解析AMD功耗值 (例如 "150.5" -> 150.5)
+func parseAMDPower(value string) (float64, error) {
+	cleaned := strings.TrimSpace(value)
+	cleaned = strings.TrimSuffix(cleaned, "W")
+	cleaned = strings.TrimSpace(cleaned)
+
+	if cleaned == "" || cleaned == "N/A" {
+		return 0.0, nil
+	}
+
+	result, err := strconv.ParseFloat(cleaned, 64)
+	if err != nil {
+		return 0.0, err
 	}
 
 	return result, nil

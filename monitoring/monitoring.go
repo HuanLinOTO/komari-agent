@@ -100,6 +100,7 @@ func GenerateReport() []byte {
 					"memory_used":  info.MemoryUsed,
 					"utilization":  info.Utilization,
 					"temperature":  info.Temperature,
+					"power_usage":  info.PowerUsage,
 				}
 				totalGPUUsage += info.Utilization
 			}
